@@ -2,15 +2,15 @@ import pygame
 import math
 import random
 import os
-from maps.mapa import TILES_LARGURA, TILES_ALTURA  # ← TILES_LARGURA e TILES_ALTURA (sem duplicar)
 from configs import config
+
 # --- CONFIGURAÇÕES ---
 VELOCIDADE_MIN = 1.5
 VELOCIDADE_MAX = 3.5
-ALCANCE_VISAO = 280
+ALCANCE_VISAO  = 280
 ALCANCE_ATAQUE = 22
-COOLDOWN_DANO = 800  # ms
-TOTAL_ZUMBIS = 100
+COOLDOWN_DANO  = 800  # ms
+TOTAL_ZUMBIS   = 100
 
 _NOMES_SPRITES = [
     "ZombieLabcoat1.png",
@@ -19,11 +19,6 @@ _NOMES_SPRITES = [
     "ZombiePrisonerSkinny.png",
 ]
 
-# e nas pastas:
-pastas = [
-    os.path.join("..", "assets", "sprite", "Life Asset Pack", "Characters", "Zombies"),
-    os.path.join("assets", "sprite", "Life Asset Pack", "Characters", "Zombies"),
-]
 _imagens_carregadas: list[pygame.Surface] = []
 
 
@@ -57,23 +52,26 @@ def _carregar_imagens():
 
 
 class Zumbi(pygame.sprite.Sprite):
-    def __init__(self, x: float, y: float, velocidade: float):
+    def __init__(self, x: float, y: float, velocidade: float,
+                 limite_x: float, limite_y: float):  # ← limites adicionados
         super().__init__()
 
         _carregar_imagens()
 
-        self._img_base = random.choice(_imagens_carregadas)
-        self.image = self._img_base
-        self.rect = self.image.get_rect(center=(int(x), int(y)))
+        self._img_base  = random.choice(_imagens_carregadas)
+        self.image      = self._img_base
+        self.rect       = self.image.get_rect(center=(int(x), int(y)))
 
-        self.pos_x = float(x)
-        self.pos_y = float(y)
+        self.pos_x      = float(x)
+        self.pos_y      = float(y)
         self.velocidade = velocidade
         self.perseguindo = False
         self.ultimo_dano = 0
-        self.vivo = True
-        self._ruido_ang = random.uniform(-0.10, 0.10)
+        self.vivo        = True
+        self._ruido_ang  = random.uniform(-0.10, 0.10)
         self._angulo_atual = 0.0
+        self._limite_x   = limite_x  # ← salva limites
+        self._limite_y   = limite_y
 
     def update(self, player_rect: pygame.Rect, paredes: list, dt: int):
         if not self.vivo:
@@ -102,7 +100,7 @@ class Zumbi(pygame.sprite.Sprite):
                     if dx > 0:
                         self.rect.right = parede.left
                     else:
-                        self.rect.left = parede.right
+                        self.rect.left  = parede.right
                     self.pos_x = float(self.rect.centerx)
                     break
 
@@ -114,22 +112,22 @@ class Zumbi(pygame.sprite.Sprite):
                     if dy > 0:
                         self.rect.bottom = parede.top
                     else:
-                        self.rect.top = parede.bottom
+                        self.rect.top    = parede.bottom
                     self.pos_y = float(self.rect.centery)
                     break
 
-        # Rotaciona sprite na direção do movimento
+        # Clamp com limites reais do mapa
         MARGEM = config.TAMANHO_TILE
-        self.pos_x = max(MARGEM, min(self.pos_x, TILES_LARGURA * config.TAMANHO_TILE - MARGEM))
-        self.pos_y = max(MARGEM, min(self.pos_y, TILES_ALTURA * config.TAMANHO_TILE - MARGEM))
-        self.rect.centerx = int(self.pos_x)
-        self.rect.centery = int(self.pos_y)
-        graus = -math.degrees(self._angulo_atual)
+        self.pos_x = max(MARGEM, min(self.pos_x, self._limite_x - MARGEM))
+        self.pos_y = max(MARGEM, min(self.pos_y, self._limite_y - MARGEM))
+
+        # Rotaciona sprite
+        graus      = -math.degrees(self._angulo_atual)
         self.image = pygame.transform.rotate(self._img_base, graus)
         self.rect  = self.image.get_rect(center=(int(self.pos_x), int(self.pos_y)))
-        
+
     def tentar_causar_dano(self, player_rect: pygame.Rect) -> bool:
-        now = pygame.time.get_ticks()
+        now  = pygame.time.get_ticks()
         dist = math.hypot(
             player_rect.centerx - self.pos_x,
             player_rect.centery - self.pos_y,
@@ -145,24 +143,27 @@ class Zumbi(pygame.sprite.Sprite):
 
 
 # ======================================================================
-#  SPAWNER — só spawna dentro dos limites reais do mapa
+#  SPAWNER
 # ======================================================================
 def spawnar_zumbis(
-    mapa_matriz: list, tamanho_tile: int, pos_player: tuple
+    mapa_matriz: list, tamanho_tile: int, pos_player: tuple,
+    total_zumbis: int = 100
 ) -> pygame.sprite.Group:
-    grupo = pygame.sprite.Group()
+    grupo   = pygame.sprite.Group()
     linhas  = len(mapa_matriz)
     colunas = len(mapa_matriz[0]) if linhas > 0 else 0
     margem  = 3
+
+    # Limites reais do mapa em pixels
+    limite_x = colunas * tamanho_tile
+    limite_y = linhas  * tamanho_tile
 
     tiles_chao = []
     for lin in range(margem, linhas - margem):
         for col in range(margem, colunas - margem):
             bloco = mapa_matriz[lin][col]
-            if bloco not in (0, 3, 4, 5):
+            if bloco not in (0, 4, 5, 6, 7):
                 continue
-
-            # Verifica se os 8 vizinhos também são chão (evita spawn na borda de parede)
             vizinhos_ok = all(
                 mapa_matriz[lin + dl][col + dc] not in (1, 9)
                 for dl in (-1, 0, 1)
@@ -170,9 +171,8 @@ def spawnar_zumbis(
             )
             if not vizinhos_ok:
                 continue
-
             cx = col * tamanho_tile + tamanho_tile // 2
-            cy = lin * tamanho_tile + tamanho_tile // 2
+            cy = lin  * tamanho_tile + tamanho_tile // 2
             if math.hypot(cx - pos_player[0], cy - pos_player[1]) > 350:
                 tiles_chao.append((cx, cy))
 
@@ -182,16 +182,13 @@ def spawnar_zumbis(
 
     random.shuffle(tiles_chao)
 
-    for i in range(TOTAL_ZUMBIS):
+    for i in range(total_zumbis):
         tile = tiles_chao[i % len(tiles_chao)]
-        # Remove o offset aleatório — spawna exatamente no centro do tile
-        x = float(tile[0])
-        y = float(tile[1])
-        vel = random.triangular(
+        vel  = random.triangular(
             VELOCIDADE_MIN, VELOCIDADE_MAX,
             (VELOCIDADE_MIN + VELOCIDADE_MAX) / 2
         )
-        grupo.add(Zumbi(x, y, vel))
+        grupo.add(Zumbi(float(tile[0]), float(tile[1]), vel, limite_x, limite_y))
 
-    print(f"[Spawner] {len(grupo)} zumbis criados em {len(tiles_chao)} tiles válidos.")
+    print(f"[Spawner] {len(grupo)} zumbis em {len(tiles_chao)} tiles válidos.")
     return grupo
