@@ -5,8 +5,8 @@ import os
 from maps.mapa import TILES_LARGURA, TILES_ALTURA  # ← TILES_LARGURA e TILES_ALTURA (sem duplicar)
 from configs import config
 # --- CONFIGURAÇÕES ---
-VELOCIDADE_MIN = 0.8
-VELOCIDADE_MAX = 2.4
+VELOCIDADE_MIN = 1.5
+VELOCIDADE_MAX = 3.5
 ALCANCE_VISAO = 280
 ALCANCE_ATAQUE = 22
 COOLDOWN_DANO = 800  # ms

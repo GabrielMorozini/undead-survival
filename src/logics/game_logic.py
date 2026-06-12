@@ -178,7 +178,7 @@ class SistemaJogo:
 
     def iniciar(self, jogador, mapa):
         self._mapa_ref     = mapa
-        self.vidas         = 3
+        self.vidas         = 1
         self.zumbis_mortos = 0
         jogador.rect.centerx = mapa.spawn_player_px[0]
         jogador.rect.centery = mapa.spawn_player_px[1]

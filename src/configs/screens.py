@@ -103,15 +103,17 @@ def desenhar_hud(tela, fonte, zumbis_restantes, vidas, municao=0, municao_max=30
     pygame.draw.line(tela, (240, 240, 240), (0, 50), (config.LARGURA, 50), 2)
 
     txt_missao = fonte.render(f"Zumbis: {zumbis_restantes}", True, (255, 255, 0))
-    txt_vidas = fonte.render(f"HP: {vidas}", True, (255, 80, 80))
-    
-    # Munição fica vermelha quando está baixa
-    cor_mun = (255, 60, 60) if municao <= 3 else (255, 255, 255)
+    txt_vidas  = fonte.render(f"HP: {vidas}", True, (255, 80, 80))
+
+    cor_mun    = (255, 60, 60) if municao <= 3 else (255, 255, 255)
     txt_municao = fonte.render(f"Balas: {municao}/{municao_max}", True, cor_mun)
 
+    # Zumbis — esquerda
     tela.blit(txt_missao, (20, 13))
+    # HP — logo após os zumbis
+    tela.blit(txt_vidas, (20 + txt_missao.get_width() + 30, 13))
+    # Munição — centro
     tela.blit(txt_municao, (config.LARGURA // 2 - txt_municao.get_width() // 2, 13))
-    tela.blit(txt_vidas, (config.LARGURA - 150, 13))
 
 def desenhar_vitoria(tela, fonte, fonte_grande):
     txt = fonte_grande.render("VOCÊ ESCAPOU!", True, (0, 255, 0))

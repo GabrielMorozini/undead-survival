@@ -30,17 +30,6 @@ except Exception:
 
 pygame.mixer.init()
 
-# --- MUZZLE FLASH ---
-pasta_flash = os.path.join("..", "assets", "sprite", "Survivor Spine", "images")
-if not os.path.exists(pasta_flash):
-    pasta_flash = os.path.join("assets", "sprite", "Survivor Spine", "images")
-caminho_flash = os.path.join(pasta_flash, "muzzle_flash01.png")
-try:
-    muzzle_img = pygame.image.load(caminho_flash).convert_alpha()
-    muzzle_img = pygame.transform.scale(muzzle_img, (32, 32))
-except Exception:
-    muzzle_img = None
-
 # --- MÚSICA ---
 pasta_musica = os.path.join("..", "assets", "music")
 if not os.path.exists(pasta_musica):
