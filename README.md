@@ -1,8 +1,7 @@
 # 🧟 Undead Survival
 
-![Badge Concluído](https://img.shields.io/badge/Status-Concluido-green)
+![Badge Concluído](https://img.shields.io/badge/Status-Developing-yellow)
 ![Pixel Art](https://img.shields.io/badge/Art-2D%20Pixel%20Art-blueviolet)
-![Gênero](https://img.shields.io/badge/G%C3%AAnero-Top--Down%20Shooter-red)
 
 **Undead Survival** é um jogo de tiro *top-down* (visão aérea) em 2D com estilo clássico em pixel art. O desafio é direto e brutal: você está em uma arena fechada e o seu único objetivo é eliminar todos os zumbis para garantir a sua vitória. 
 
